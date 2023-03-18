@@ -3,18 +3,10 @@ from pydantic import BaseModel
 
 from database.models import User
 from schemas import UserRetrieve
+from schemas.user import Token
 from utils.auth import ActiveUser, GetToken
 
 router = APIRouter(prefix="/auth", tags=["Authorization"])
-
-
-class Credentials(BaseModel):
-    username: str
-    password: str
-
-
-class Token(BaseModel):
-    token: str
 
 
 @router.post(
