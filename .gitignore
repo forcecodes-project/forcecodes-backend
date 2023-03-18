@@ -1,3 +1,6 @@
+.vscode
+.idea
+
 __pyenv__
 *pycache*
 *.pyc
