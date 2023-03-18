@@ -4,8 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import JSON, Column, ForeignKey
-from sqlalchemy.orm import (Mapped, declarative_base, mapped_column,
-                            relationship)
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()

@@ -10,6 +10,8 @@ app = FastAPI(title="Forcecodes Service API")
 
 app.include_router(routers.auth_router)
 app.include_router(routers.problems_router)
+app.include_router(routers.users_router)
+app.include_router(routers.attempts_router)
 
 
 @app.on_event("startup")
