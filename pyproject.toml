@@ -13,6 +13,7 @@ loguru = "^0.6.0"
 sqlalchemy = "^2.0.6"
 greenlet = "^2.0.2"
 uvicorn = "^0.21.1"
+asyncpg = "^0.27.0"
 
 
 [tool.poetry.group.dev.dependencies]

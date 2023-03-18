@@ -1,39 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
-class TestCase(BaseModel):
-    input: str
-    output: str
-
-
-class Problem(BaseModel):
-    id: int
-    title: str
-    description: str
-    test_cases: list[TestCase]
-
-
-problems = [
-    Problem(
-        id=1,
-        title="A+B",
-        description="Return sum of two given numbers",
-        test_cases=[
-            TestCase(input="1 1", output="2"),
-            TestCase(input="0 -10", output="-10"),
-        ],
-    ),
-    Problem(
-        id=2,
-        title="A-B",
-        description="Return diff of two given numbers",
-        test_cases=[
-            TestCase(input="1 1", output="0"),
-            TestCase(input="0 -10", output="10"),
-        ],
-    ),
-]
+from database.models import Problem
+from database.session import get_db
+from schemas.problem import ProblemRetrieve
 
 router = APIRouter(prefix="/problems", tags=["Problems"])
 
@@ -41,21 +13,22 @@ router = APIRouter(prefix="/problems", tags=["Problems"])
 @router.get(
     "/",
     description="Получение списка всех задач",
-    response_model=list[Problem],
+    response_model=list[ProblemRetrieve],
 )
-async def retrieve_problems():
-    return problems
+async def retrieve_problems(session: AsyncSession = Depends(get_db)):
+    return (await session.execute(select(Problem))).scalars().all()
 
 
 @router.get(
     "/{id}",
     description="Получение конкретной задачи по id",
-    response_model=Problem,
+    response_model=ProblemRetrieve,
 )
-async def retrieve_problem(id: int):
-    try:
-        if problem := problems[id - 1]:
-            return problem
-    except Exception:
-        ...
+async def retrieve_problem(id: int, session: AsyncSession = Depends(get_db)):
+    if (
+        problem := (await session.execute(select(Problem).where(Problem.id == id)))
+        .scalars()
+        .first()
+    ):
+        return problem
     raise HTTPException(status_code=404, detail="Problem not found")

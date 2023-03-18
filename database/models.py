@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-import enum
-import os
-from asyncio import current_task
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Enum, Float, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session, create_async_engine
-from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Mapped, mapped_column
+from sqlalchemy import JSON, Column, ForeignKey
+from sqlalchemy.orm import (Mapped, declarative_base, mapped_column,
+                            relationship)
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -23,30 +19,29 @@ class BaseSQLAModel(Base):
 
 
 class User(BaseSQLAModel):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     username: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str]
 
+    def __str__(self):
+        return f"<User {self.id}: {self.username}>"
+
 
 class Problem(BaseSQLAModel):
-    __tablename__ = 'problems'
+    __tablename__ = "problems"
 
-    author_id: Mapped[int] = mapped_column(nullable=False)
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     title: Mapped[str]
     description: Mapped[str]
-    test_cases: Mapped[str]
+    # test_cases = Column(JSONB) TODO: FIX JSONB MAPPED UNDEFINED BEHAVIOUR
 
     # megabytes
     memory_limit: Mapped[int]
     # seconds
     time_limit: Mapped[int]
-    
 
-connection_string = os.getenv("DB_CONN_STRING", "postgresql+asyncpg://test:test@localhost/test")
-engine = create_async_engine(connection_string, echo=False)
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)  # noqa
-session_factory = async_scoped_session(
-    sessionmaker(engine, AsyncSession, autoflush=False, expire_on_commit=False),  # noqa
-    scopefunc=current_task,
-)
+    author: Mapped["User"] = relationship()
+
+    def __str__(self):
+        return f"<Problem {self.id}: {self.title}>"
