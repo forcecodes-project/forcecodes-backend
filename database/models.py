@@ -3,9 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, Column, ForeignKey
+from sqlalchemy import JSON, Column, ForeignKey, Enum
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import func
+
+from utils.enums import ProgrammingLanguage, AttemptStatus
 
 Base = declarative_base()
 
@@ -44,3 +47,17 @@ class Problem(BaseSQLAModel):
 
     def __str__(self):
         return f"<Problem {self.id}: {self.title}>"
+
+
+class Attempt(BaseSQLAModel):
+    __tablename__ = "attempts"
+
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    filename: Mapped[str] = mapped_column(nullable=True)
+    language: Mapped[ProgrammingLanguage]
+    status: Mapped[AttemptStatus]
+
+    author: Mapped["User"] = relationship()
+
+    def __str__(self):
+        return f"<Attempt {self.id}: {self.status}>"
