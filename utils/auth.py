@@ -1,11 +1,11 @@
 from fastapi import Depends, Header, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
 from database.session import get_db
-from schemas.user import Token
+from schemas.user import NewUser, Token
 
 
 def hash_password(pwd: str) -> str:
@@ -67,5 +67,22 @@ async def generate_token(
     return Token(token=f"{cred.username}_{cred.password}_1234")
 
 
+async def create_user(
+    data: NewUser,
+    session: AsyncSession = Depends(get_db),
+) -> User:
+    if user := (
+        await session.execute(select(User).where(User.username == data.username))
+    ).one_or_none():
+        raise HTTPException(
+            status_code=500, detail="User with such username already exists"
+        )
+    user = User(username=data.username, hashed_password=hash_password(data.password))
+    session.add(user)
+    await session.commit()
+    return user
+
+
+CreatedUser = Depends(create_user)
 ActiveUser = Depends(get_current_user)
 GetToken = Depends(generate_token)

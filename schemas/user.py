@@ -8,3 +8,8 @@ class UserRetrieve(Schema):
 
 class Token(Schema):
     token: str
+
+
+class NewUser(Schema):
+    username: str
+    password: str
