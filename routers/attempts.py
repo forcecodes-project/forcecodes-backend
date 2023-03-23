@@ -1,14 +1,17 @@
+import pathlib
+from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, File, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, File, Depends, HTTPException, Body, UploadFile
+from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User, Attempt
 from database.session import get_db
 from schemas.attempt import AttemptRetrieve
 from utils.auth import ActiveUser
-from utils.enums import ProgrammingLanguage
+from utils.enums import ProgrammingLanguage, AttemptStatus
+from utils.test_runner import test_file, TestingResult
 
 router = APIRouter(prefix="/attempts", tags=["User Attempts"])
 
@@ -52,10 +55,38 @@ async def get_attempt_details(
     return attempt
 
 
-@router.post("/")
+@router.post(
+    "/",
+    description="Upload solution to judging",
+    response_model=TestingResult,
+)
 async def new_attempt(
-    file: Annotated[bytes, File()],
+    file: UploadFile = File(...),
     user: User = ActiveUser,
-    language: ProgrammingLanguage = ProgrammingLanguage.python,
+    problem_id: int = Body(..., embed=True),
+    session: AsyncSession = Depends(get_db),
 ):
-    ...
+    path = pathlib.Path(f"./tmp/{problem_id}_{user.id}_{datetime.now().timestamp()}.py")
+
+    with open(path, "wb") as f:
+        f.write(await file.read())
+
+    test_cases = [
+        {"test": "1 1", "result": "2"},
+        {"test": "1 -1", "result": "0"},
+        {"test": "1000 1", "result": "1001"},
+    ]
+
+    result = test_file(path, cases=test_cases)
+
+    attempt = Attempt(
+        author_id=user.id,
+        filename="path",
+        language=ProgrammingLanguage.python,
+        status=AttemptStatus.success if result.success else AttemptStatus.failed,
+    )
+
+    session.add(attempt)
+    await session.commit()
+
+    return result

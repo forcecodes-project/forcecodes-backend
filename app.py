@@ -21,6 +21,11 @@ async def startup():
     from database.models import Base
     from database.session import engine
 
+    import os
+
+    if not os.path.exists("./tmp"):
+        os.mkdir("./tmp")
+
     conn: AsyncConnection
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -29,8 +34,8 @@ async def startup():
         # create test user
         u_q = insert(User).values(
             id=1,
-            hashed_password="pass_1234",
-            username="test",
+            hashed_password="string_1234",
+            username="string",
         )
         await conn.execute(u_q)
 
