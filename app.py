@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -7,6 +8,16 @@ import routers
 from database.models import Problem, User
 
 app = FastAPI(title="Forcecodes Service API")
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(routers.auth_router)
 app.include_router(routers.problems_router)
@@ -18,10 +29,10 @@ app.include_router(routers.attempts_router)
 async def startup():
     logger.info("Running service")
 
+    import os
+
     from database.models import Base
     from database.session import engine
-
-    import os
 
     if not os.path.exists("./tmp"):
         os.mkdir("./tmp")
