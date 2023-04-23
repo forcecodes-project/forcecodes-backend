@@ -13,6 +13,19 @@ def hash_password(pwd: str) -> str:
     return f"{pwd}_1234"
 
 
+async def get_optional_user(
+    token: str | None = Header(default=None), session: AsyncSession = Depends(get_db)
+) -> User | None:
+    """Returns user or none if not authorized without an exceptions."""
+    if not token:
+        return None
+
+    try:
+        return await get_current_user(token, session)
+    except Exception as e:
+        return None
+
+
 async def get_current_user(
     token: str = Header(...), session: AsyncSession = Depends(get_db)
 ) -> User:
@@ -85,4 +98,5 @@ async def create_user(
 
 CreatedUser = Depends(create_user)
 ActiveUser = Depends(get_current_user)
+OptionalUser = Depends(get_optional_user)
 GetToken = Depends(generate_token)

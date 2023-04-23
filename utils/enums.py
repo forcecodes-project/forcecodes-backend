@@ -6,6 +6,12 @@ class ProgrammingLanguage(str, Enum):
 
 
 class AttemptStatus(str, Enum):
-    pending = "Pending"
-    failed = "Failed"
-    success = "Success"
+    pending = "pending"
+    failed = "failed"
+    success = "success"
+
+
+class ProblemDiff(str, Enum):
+    easy = "easy"
+    medium = "medium"
+    hard = "hard"

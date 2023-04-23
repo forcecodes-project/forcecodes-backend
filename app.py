@@ -37,10 +37,11 @@ async def startup():
     if not os.path.exists("./tmp"):
         os.mkdir("./tmp")
 
+    return
     conn: AsyncConnection
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+        # await conn.run_sync(Base.metadata.drop_all)
+        # await conn.run_sync(Base.metadata.create_all)
 
         # create test user
         u_q = insert(User).values(

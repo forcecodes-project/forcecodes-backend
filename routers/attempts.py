@@ -2,16 +2,16 @@ import pathlib
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, File, Depends, HTTPException, Body, UploadFile
-from sqlalchemy import select, insert
+from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User, Attempt
+from database.models import Attempt, User, Problem
 from database.session import get_db
 from schemas.attempt import AttemptRetrieve
 from utils.auth import ActiveUser
-from utils.enums import ProgrammingLanguage, AttemptStatus
-from utils.test_runner import test_file, TestingResult
+from utils.enums import AttemptStatus, ProgrammingLanguage
+from utils.test_runner import TestingResult, test_file
 
 router = APIRouter(prefix="/attempts", tags=["User Attempts"])
 
@@ -26,19 +26,22 @@ async def get_last_attempts(
     session: AsyncSession = Depends(get_db),
 ):
     """Get last 10 user attempts."""
-    return (
-        (
-            await session.execute(
-                select(Attempt)
-                .where(
-                    Attempt.author_id == user.id,
-                )
-                .limit(10)
-            )
+    q = (
+        select(
+            Attempt.id.label("id"),
+            Attempt.status.label("status"),
+            Attempt.ts_created.label("ts_created"),
+            Problem.title.label("problem_name"),
         )
-        .scalars()
-        .all()
+        .join(Problem)
+        .where(
+            Attempt.author_id == user.id,
+        )
+        .limit(10)
     )
+    data = (await session.execute(q)).mappings().all()
+    print(q)
+    return data
 
 
 @router.get("/{id}")
@@ -83,6 +86,7 @@ async def new_attempt(
         author_id=user.id,
         filename="path",
         language=ProgrammingLanguage.python,
+        problem_id=problem_id,
         status=AttemptStatus.success if result.success else AttemptStatus.failed,
     )
 

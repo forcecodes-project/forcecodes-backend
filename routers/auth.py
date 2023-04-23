@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from database.models import User
 from schemas import UserRetrieve
 from schemas.user import NewUser, Token
-from utils.auth import CreatedUser, GetToken, ActiveUser
+from utils.auth import ActiveUser, CreatedUser, GetToken
 
 router = APIRouter(prefix="/auth", tags=["Authorization"])
 

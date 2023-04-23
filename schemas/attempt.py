@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from utils.enums import AttemptStatus, ProgrammingLanguage
+
 from .base import Schema
 
 
 class AttemptRetrieve(Schema):
     id: int
-    author_id: int
     status: AttemptStatus
-    language: ProgrammingLanguage
+    ts_created: datetime
+
+    problem_name: str

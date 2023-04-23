@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, Column, ForeignKey, Enum
+from sqlalchemy import JSON, Column, Enum, ForeignKey
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from utils.enums import ProgrammingLanguage, AttemptStatus
+from utils.enums import AttemptStatus, ProgrammingLanguage, ProblemDiff
 
 Base = declarative_base()
 
@@ -43,6 +43,8 @@ class Problem(BaseSQLAModel):
     # seconds
     time_limit: Mapped[int]
 
+    difficulty: Mapped[ProblemDiff] = mapped_column(default=ProblemDiff.easy)
+
     author: Mapped["User"] = relationship()
 
     def __str__(self):
@@ -55,9 +57,11 @@ class Attempt(BaseSQLAModel):
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     filename: Mapped[str] = mapped_column(nullable=True)
     language: Mapped[ProgrammingLanguage]
-    status: Mapped[AttemptStatus]
+    status: Mapped[AttemptStatus] = mapped_column(default=AttemptStatus.pending)
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problems.id"), nullable=False)
 
     author: Mapped["User"] = relationship()
+    problem: Mapped["Problem"] = relationship()
 
     def __str__(self):
         return f"<Attempt {self.id}: {self.status}>"
