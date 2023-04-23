@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 import routers
 from database.models import Problem, User
+from utils.enums import ProblemDiff
 
 app = FastAPI(title="Forcecodes Service API")
 
@@ -37,11 +38,10 @@ async def startup():
     if not os.path.exists("./tmp"):
         os.mkdir("./tmp")
 
-    return
     conn: AsyncConnection
     async with engine.begin() as conn:
-        # await conn.run_sync(Base.metadata.drop_all)
-        # await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
         # create test user
         u_q = insert(User).values(
@@ -76,6 +76,7 @@ async def startup():
             memory_limit=128,
             time_limit=10,
             author_id=1,
+            difficulty=ProblemDiff.medium,
         )
         await conn.execute(q)
         await conn.commit()
